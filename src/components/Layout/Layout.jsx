@@ -16,7 +16,8 @@ const Layout = ({
   onSessionUpdate,
   onNewChat,
   onSelectSession,
-  onDeleteSession
+  onDeleteSession,
+  onStartCategoryDraft // <--- 1. NHẬN PROP TỪ APP
 }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -34,6 +35,7 @@ const Layout = ({
         onNewChat={onNewChat}
         onSelectSession={onSelectSession}
         onDeleteSession={onDeleteSession}
+        onStartCategoryDraft={onStartCategoryDraft} // <--- 2. TRUYỀN TIẾP CHO SIDEBAR
       />
 
       {/* Main Content Area */}

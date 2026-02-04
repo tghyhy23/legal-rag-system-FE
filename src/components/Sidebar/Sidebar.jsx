@@ -1,6 +1,5 @@
 import React from "react";
-import { CATEGORIES, WELCOME_MESSAGE_CONTENT } from "../../constants";
-import { saveStoredSessions } from "../../services/storageService";
+import { CATEGORIES } from "../../constants";
 import "./Sidebar.css";
 
 const Sidebar = ({
@@ -9,52 +8,36 @@ const Sidebar = ({
     isOpen,
     sessions = [],
     currentSessionId,
-    onSessionUpdate,
+    onNewChat,           // Đổi tên prop cho rõ nghĩa: Hàm reset về nháp
     onSelectSession,
     onDeleteSession,
+    onStartCategoryDraft,
 }) => {
     
-    // --- 1. LOGIC TẠO CUỘC TRÒ CHUYỆN MỚI ---
-    // Cập nhật: Nhận tham số title để đặt tên cho chat (dùng cho khi click Category)
-    const handleCreateNewChat = (customTitle = null) => {
-        const newSession = {
-            id: Date.now().toString(),
-            title: customTitle || "Cuộc trò chuyện mới", // Nếu có title riêng thì dùng, ko thì mặc định
-            timestamp: Date.now(),
-            messages: [
-                {
-                    id: "welcome",
-                    role: "model",
-                    content: WELCOME_MESSAGE_CONTENT,
-                    timestamp: new Date(),
-                },
-            ],
-        };
-
-        const updatedSessions = [newSession, ...sessions];
-        saveStoredSessions(updatedSessions);
-
-        if (onSessionUpdate) {
-            onSessionUpdate(updatedSessions, newSession.id);
+    // --- 1. CLICK NEW CHAT (CHUYỂN VỀ CHẾ ĐỘ NHÁP) ---
+    const handleNewChatClick = () => {
+        // Reset category về rỗng
+        onSelectCategory("");
+        
+        // Gọi hàm reset bên App (Không tạo session ngay)
+        if (onNewChat) {
+            onNewChat();
         }
     };
 
-    // --- 2. XỬ LÝ KHI CLICK VÀO DANH MỤC (Vấn đề 2) ---
+    // --- 2. CLICK CATEGORY (CHUYỂN TAB NHÁP - LAZY) ---
     const handleCategoryClick = (categoryName) => {
-        // Bước 1: Gọi hàm chọn danh mục (để App biết đang ở filter nào)
         onSelectCategory(categoryName);
-        
-        // Bước 2: Tạo ngay một cuộc trò chuyện mới với tên danh mục
-        handleCreateNewChat(`Tra cứu: ${categoryName}`);
+        if (onStartCategoryDraft) {
+            onStartCategoryDraft();
+        }
     };
 
-    // --- 3. XỬ LÝ NÚT BÁO CÁO ---
+    // --- 3. BÁO CÁO ---
     const handleContactSupport = () => {
-        // Mở trình email mặc định
-        const email = "hotro.phapluat@cand.gov.vn"; // Thay bằng email thực tế
-        const subject = encodeURIComponent("Báo cáo nội dung cần hiệu chỉnh - Trợ lý Pháp luật");
-        const body = encodeURIComponent("Kính gửi bộ phận kỹ thuật,\n\nTôi muốn báo cáo nội dung sau:\n...");
-        
+        const email = "hotro.phapluat@cand.gov.vn";
+        const subject = encodeURIComponent("Báo cáo nội dung cần hiệu chỉnh");
+        const body = encodeURIComponent("Kính gửi bộ phận kỹ thuật...");
         window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     };
 
@@ -68,7 +51,7 @@ const Sidebar = ({
 
                 {/* New Chat Button */}
                 <div className="sidebar-new-chat-wrapper">
-                    <button onClick={() => handleCreateNewChat()} className="btn-new-chat" aria-label="Start a new chat">
+                    <button onClick={handleNewChatClick} className="btn-new-chat">
                         <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -76,11 +59,11 @@ const Sidebar = ({
                     </button>
                 </div>
 
-                {/* Navigation */}
-                <nav className="sidebar-nav scrollbar-thin">
-                    {/* History Section */}
+                {/* Navigation Area */}
+                <nav className="sidebar-nav">
+                    {/* Phần Lịch Sử */}
                     {sessions.length > 0 && (
-                        <div className="nav-group">
+                        <div className="nav-group group-history scrollbar-thin">
                             <div className="nav-group-header">
                                 <h3 className="nav-heading">Lịch sử</h3>
                             </div>
@@ -92,7 +75,7 @@ const Sidebar = ({
                                             className={`nav-item history-item ${currentSessionId === session.id ? "active" : ""}`} 
                                             title={session.title}
                                         >
-                                            {session.title}
+                                            <span>{session.title}</span>
                                         </button>
                                         <button onClick={(e) => onDeleteSession(e, session.id)} className="btn-delete-session" title="Xóa">
                                             <svg className="icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,63 +88,59 @@ const Sidebar = ({
                         </div>
                     )}
 
-                    {/* Categories Section */}
-                    <div className="nav-group">
-                        <div className="nav-group-header">
-                            <h3 className="nav-heading">Danh mục tra cứu</h3>
+                    {/* Phần Đáy (Danh mục & Tiện ích) */}
+                    <div className="nav-bottom-wrapper">
+                        <div className="nav-group group-bottom">
+                            <div className="nav-group-header">
+                                <h3 className="nav-heading">Danh mục tra cứu</h3>
+                            </div>
+                            <ul className="nav-list">
+                                {CATEGORIES.map((category) => (
+                                    <li key={category}>
+                                        <button 
+                                            onClick={() => handleCategoryClick(category)} 
+                                            className={`nav-item category-item ${activeCategory === category ? "active" : ""}`}
+                                            title={category}
+                                        >
+                                            <span>{category}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <ul className="nav-list">
-                            {CATEGORIES.map((category) => (
-                                <li key={category}>
-                                    {/* SỬ DỤNG HÀM handleCategoryClick MỚI TẠI ĐÂY */}
-                                    <button 
-                                        onClick={() => handleCategoryClick(category)} 
-                                        className={`nav-item category-item ${activeCategory === category ? "active" : ""}`}
-                                    >
-                                        {category}
+
+                        <div className="nav-group group-bottom">
+                            <div className="nav-group-header">
+                                <h3 className="nav-heading">Tiện ích</h3>
+                            </div>
+                            <ul className="nav-list">
+                                <li>
+                                    <button onClick={() => handleCategoryClick("Tra cứu văn bản")} className={`nav-item category-item ${activeCategory === "Tra cứu văn bản" ? "active" : ""}`}>
+                                        <svg className="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        <span>Tra cứu văn bản</span>
                                     </button>
                                 </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Utilities Section */}
-                    <div className="nav-group">
-                        <div className="nav-group-header">
-                            <h3 className="nav-heading">Tiện ích</h3>
+                                <li>
+                                    <button onClick={() => onSelectCategory("Quản lý dữ liệu")} className={`nav-item category-item ${activeCategory === "Quản lý dữ liệu" ? "active" : ""}`}>
+                                        <svg className="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                        </svg>
+                                        <span>Quản lý dữ liệu</span>
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
-                        <ul className="nav-list">
-                            {/* Nút Tra cứu văn bản: Click vào cũng nên tạo chat mới */}
-                            <li>
-                                <button onClick={() => handleCategoryClick("Tra cứu văn bản")} className={`nav-item category-item ${activeCategory === "Tra cứu văn bản" ? "active" : ""}`}>
-                                    <svg className="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    <span>Tra cứu văn bản</span>
-                                </button>
-                            </li>
-                            {/* Nút Quản lý dữ liệu: Nút này thường là chuyển view khác, không tạo chat, nên giữ nguyên logic cũ */}
-                            <li>
-                                <button onClick={() => onSelectCategory("Quản lý dữ liệu")} className={`nav-item category-item ${activeCategory === "Quản lý dữ liệu" ? "active" : ""}`}>
-                                    <svg className="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                                    </svg>
-                                    <span>Quản lý dữ liệu</span>
-                                </button>
-                            </li>
-                        </ul>
                     </div>
                 </nav>
 
-                {/* Footer */}
                 <div className="sidebar-footer">
-                    {/* SỬ DỤNG HÀM handleContactSupport MỚI TẠI ĐÂY */}
                     <button onClick={handleContactSupport} className="btn-report">
                         Báo nội dung cần hiệu chỉnh
                     </button>
                 </div>
             </div>
-
             {isOpen && <div className="sidebar-overlay-mobile" onClick={() => {}} />}
         </aside>
     );

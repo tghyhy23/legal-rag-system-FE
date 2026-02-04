@@ -112,8 +112,6 @@ const DataManagement = () => {
       {/* Tabs */}
       <div className="dm-tabs">
         <button className={`dm-tab ${activeTab === "manual" ? "active" : ""}`} onClick={() => setActiveTab("manual")}>Thêm thủ công</button>
-        <button className={`dm-tab ${activeTab === "crawl" ? "active" : ""}`} onClick={() => setActiveTab("crawl")}>Cào dữ liệu (Crawl)</button>
-        <button className={`dm-tab ${activeTab === "stats" ? "active" : ""}`} onClick={() => setActiveTab("stats")}>Hệ thống & Thống kê</button>
       </div>
 
       <div className="dm-content">
@@ -158,7 +156,7 @@ const DataManagement = () => {
           </form>
         )}
 
-        {/* TAB 2: CRAWL */}
+        {/* TAB 2: CRAWL
         {activeTab === "crawl" && (
           <div className="crawl-section">
             <div className="crawl-card">
@@ -177,9 +175,9 @@ const DataManagement = () => {
               <button className="btn-action" onClick={handleCrawlSearch}>Tìm & Crawl</button>
             </div>
           </div>
-        )}
+        )} */}
 
-        {/* TAB 3: STATS */}
+        {/* TAB 3: STATS
         {activeTab === "stats" && (
           <div className="stats-section">
             <div className="stats-grid">
@@ -203,7 +201,7 @@ const DataManagement = () => {
                <button className="btn-save-index" onClick={handleSaveIndex}>Lưu dữ liệu xuống ổ cứng (Save Index)</button>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

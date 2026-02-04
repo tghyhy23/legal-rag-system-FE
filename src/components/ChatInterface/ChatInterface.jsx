@@ -212,7 +212,7 @@ const ChatInterface = ({
                 )}
 
                 <div className="input-wrapper">
-                    <textarea
+                    <input
                         ref={textareaRef} // Gán ref để focus
                         value={input}
                         onChange={(e) => setInput(e.target.value)}

@@ -1,8 +1,7 @@
-// src/components/ChatInterface/ChatInterface.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { QUICK_ACTIONS, DISCLAIMER_TEXT } from "../../constants";
-// Import service
-import { sendMessageToModel } from "../../apiRequest/chatService"; 
+// Lưu ý: Đảm bảo đường dẫn import đúng với nơi bạn lưu file service
+import { sendDemoMessage } from "../../apiRequest/chatService"; 
 import "./ChatInterface.css";
 
 const ChatInterface = ({ 
@@ -15,17 +14,17 @@ const ChatInterface = ({
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     
-    // Ref cho textarea để focus khi chọn quick action
-    const textareaRef = useRef(null); 
+    // Ref cho input
+    const inputRef = useRef(null); 
     const messagesEndRef = useRef(null);
     const isFirstRender = useRef(true);
 
-    // Effect 1: Auto scroll
+    // Effect 1: Auto scroll xuống cuối khi có tin nhắn mới
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isLoading]);
 
-    // Effect 2: Sync state
+    // Effect 2: Sync state ra ngoài (nếu cần)
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
@@ -34,46 +33,54 @@ const ChatInterface = ({
         if (onMessagesUpdate) {
             onMessagesUpdate(messages);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [messages]);
+    }, [messages, onMessagesUpdate]);
 
-    // Helper functions (Avatar, Name)
+    // --- Helper Functions ---
     const getAvatarLabel = (role) => {
         if (role === "model") return "TL";
-        if (username && username.length > 0) return username.charAt(0).toUpperCase();
-        return "CB";
+        return username && username.length > 0 ? username.charAt(0).toUpperCase() : "CB";
     };
 
     const getUserDisplayName = (role) => {
-        if (role === "model") return "Trợ lý Pháp luật";
-        return username || "Cán bộ";
+        return role === "model" ? "Trợ lý Pháp luật" : (username || "Cán bộ");
     };
 
-    // --- LOGIC GỬI TIN NHẮN ---
+    // --- XỬ LÝ GỬI TIN NHẮN ---
     const handleSendMessage = async (text = input) => {
-        if (!text.trim() || isLoading) return;
+        const queryText = text.trim();
+        if (!queryText || isLoading) return;
 
+        // 1. Tạo tin nhắn User
         const userMsg = {
             id: Date.now().toString(),
             role: "user",
-            content: text,
+            content: queryText,
             timestamp: new Date(),
         };
 
         setMessages(prev => [...prev, userMsg]);
-        setInput("");
+        setInput(""); // Xóa input ngay lập tức
         setIsLoading(true);
 
         try {
-            const data = await sendMessageToModel(text);
+            // 2. Gọi API Demo (/ask-demo)
+            const data = await sendDemoMessage(queryText);
 
+            // 3. Format nội dung trả về
+            // Demo API trả về: { answer, disclaimer, mode }
             let formattedContent = data.answer;
+
+            // Nếu có disclaimer riêng từ API, ta nối thêm vào (hoặc xử lý hiển thị riêng tuỳ ý)
+            if (data.disclaimer) {
+                formattedContent += `\n\n_Lưu ý: ${data.disclaimer}_`;
+            }
+
+            // Nếu sau này bạn dùng lại RAG có sources, giữ logic này (optional)
             if (data.sources && data.sources.length > 0) {
                 formattedContent += "\n\n**Nguồn tham khảo:**\n";
                 const uniqueSources = data.sources.filter(
                     (v, i, a) => a.findIndex((t) => t.doc_number === v.doc_number) === i
                 );
-
                 uniqueSources.forEach((source, index) => {
                     formattedContent += `${index + 1}. **${source.doc_number}** - [${source.title}](${source.url})\n`;
                 });
@@ -94,13 +101,15 @@ const ChatInterface = ({
                 {
                     id: (Date.now() + 2).toString(),
                     role: "model",
-                    content: `⚠️ Hệ thống gặp sự cố: ${error.message || "Không thể kết nối server"}. Vui lòng thử lại sau.`,
+                    content: `⚠️ Hệ thống gặp sự cố: ${error.message}. Vui lòng thử lại sau.`,
                     timestamp: new Date(),
                     isError: true,
                 },
             ]);
         } finally {
             setIsLoading(false);
+            // Focus lại vào input sau khi hoàn tất để gõ tiếp
+            setTimeout(() => inputRef.current?.focus(), 100);
         }
     };
 
@@ -111,45 +120,49 @@ const ChatInterface = ({
         }
     };
 
-    // --- LOGIC MỚI: Xử lý khi click Quick Action ---
+    // Xử lý khi chọn Quick Action (Gợi ý câu hỏi)
     const handleQuickActionClick = (actionText) => {
-        setInput(actionText); // 1. Điền text vào input
-        // 2. Focus vào textarea để người dùng sửa luôn
-        if (textareaRef.current) {
-            textareaRef.current.focus();
+        setInput(actionText);
+        if (inputRef.current) {
+            inputRef.current.focus();
         }
     };
 
+    // Render nội dung (Hỗ trợ Bold và Link cơ bản)
     const renderContent = (text) => {
         if (!text) return null;
         return text.split("\n").map((line, index) => (
-            <React.Fragment key={index}>
-                {line.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g).map((part, i) => {
+            <div key={index} style={{ minHeight: "1.2em", marginBottom: "4px" }}>
+                {line.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\)|_.*?_)/g).map((part, i) => {
+                    // Xử lý in đậm **text**
                     if (part.startsWith("**") && part.endsWith("**")) {
                         return <strong key={i}>{part.slice(2, -2)}</strong>;
                     }
+                    // Xử lý in nghiêng _text_
+                    if (part.startsWith("_") && part.endsWith("_")) {
+                        return <em key={i} className="text-gray-500">{part.slice(1, -1)}</em>;
+                    }
+                    // Xử lý link [Title](url)
                     if (part.startsWith("[") && part.includes("](") && part.endsWith(")")) {
-                        const titleStart = 1;
                         const titleEnd = part.indexOf("]");
                         const urlStart = part.indexOf("](") + 2;
-                        const urlEnd = part.length - 1;
-                        const title = part.substring(titleStart, titleEnd);
-                        const url = part.substring(urlStart, urlEnd);
+                        const title = part.substring(1, titleEnd);
+                        const url = part.substring(urlStart, part.length - 1);
                         return (
-                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline" title={url}>
+                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="link-ref">
                                 {title}
                             </a>
                         );
                     }
                     return <span key={i}>{part}</span>;
                 })}
-                <br />
-            </React.Fragment>
+            </div>
         ));
     };
 
     return (
         <div className="chat-interface">
+            {/* Banner Cảnh báo */}
             <div className="warning-banner">
                 <p className="warning-content">
                     <span className="warning-icon">⚠️</span>
@@ -157,6 +170,7 @@ const ChatInterface = ({
                 </p>
             </div>
 
+            {/* Khu vực Chat */}
             <div className="chat-area">
                 {category && (
                     <div className="category-badge-wrapper">
@@ -194,14 +208,14 @@ const ChatInterface = ({
                 <div ref={messagesEndRef} />
             </div>
 
+            {/* Khu vực Input */}
             <div className="input-area">
-                {/* Quick Actions */}
+                {/* Quick Actions - Chỉ hiện khi ít tin nhắn và input rỗng */}
                 {messages.length < 3 && !input && (
                     <div className="quick-actions">
                         {QUICK_ACTIONS.map((action) => (
                             <button 
                                 key={action} 
-                                // THAY ĐỔI Ở ĐÂY: Gọi handleQuickActionClick thay vì handleSendMessage
                                 onClick={() => handleQuickActionClick(action)} 
                                 className="btn-quick-action"
                             >
@@ -213,25 +227,31 @@ const ChatInterface = ({
 
                 <div className="input-wrapper">
                     <input
-                        ref={textareaRef} // Gán ref để focus
+                        ref={inputRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Nhập câu hỏi pháp luật (không nhập thông tin mật/OTP/vụ việc nhạy cảm)..."
+                        placeholder="Nhập câu hỏi pháp luật (không nhập thông tin mật/OTP)..."
                         className="chat-input"
                         disabled={isLoading}
+                        autoComplete="off"
                     />
                     <button 
                         onClick={() => handleSendMessage()} 
                         disabled={!input.trim() || isLoading} 
                         className="btn-send"
+                        title="Gửi câu hỏi"
                     >
+                        {/* Icon Send mũi tên */}
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </button>
                 </div>
-                <p className="footer-note">Hệ thống lưu vết truy cập theo quy định an ninh nội bộ.</p>
+                
+                <p className="footer-note">
+                    Hệ thống đang chạy chế độ Demo (Gemini AI). Thông tin mang tính tham khảo.
+                </p>
             </div>
         </div>
     );

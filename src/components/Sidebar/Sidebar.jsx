@@ -1,6 +1,6 @@
 import React from "react";
-import { CATEGORIES, WELCOME_MESSAGE_CONTENT } from "../../constants"; // Import hằng số
-import { saveStoredSessions } from "../../services/storageService"; // Import service lưu trữ
+import { CATEGORIES, WELCOME_MESSAGE_CONTENT } from "../../constants";
+import { saveStoredSessions } from "../../services/storageService";
 import "./Sidebar.css";
 
 const Sidebar = ({
@@ -9,17 +9,17 @@ const Sidebar = ({
     isOpen,
     sessions = [],
     currentSessionId,
-    // Thay đổi prop: Không nhận hàm tạo chat nữa, mà nhận hàm cập nhật state cha
     onSessionUpdate,
     onSelectSession,
     onDeleteSession,
 }) => {
-    // --- LOGIC TẠO CUỘC TRÒ CHUYỆN MỚI (Đã chuyển vào đây) ---
-    const handleCreateNewChat = () => {
-        // 1. Tạo object session mới
+    
+    // --- 1. LOGIC TẠO CUỘC TRÒ CHUYỆN MỚI ---
+    // Cập nhật: Nhận tham số title để đặt tên cho chat (dùng cho khi click Category)
+    const handleCreateNewChat = (customTitle = null) => {
         const newSession = {
             id: Date.now().toString(),
-            title: "Cuộc trò chuyện mới",
+            title: customTitle || "Cuộc trò chuyện mới", // Nếu có title riêng thì dùng, ko thì mặc định
             timestamp: Date.now(),
             messages: [
                 {
@@ -31,16 +31,31 @@ const Sidebar = ({
             ],
         };
 
-        // 2. Cập nhật danh sách (Thêm vào đầu)
         const updatedSessions = [newSession, ...sessions];
-
-        // 3. Lưu vào LocalStorage ngay tại Sidebar
         saveStoredSessions(updatedSessions);
 
-        // 4. Báo cho App.jsx biết để cập nhật giao diện (setSessions & setCurrentSessionId)
         if (onSessionUpdate) {
             onSessionUpdate(updatedSessions, newSession.id);
         }
+    };
+
+    // --- 2. XỬ LÝ KHI CLICK VÀO DANH MỤC (Vấn đề 2) ---
+    const handleCategoryClick = (categoryName) => {
+        // Bước 1: Gọi hàm chọn danh mục (để App biết đang ở filter nào)
+        onSelectCategory(categoryName);
+        
+        // Bước 2: Tạo ngay một cuộc trò chuyện mới với tên danh mục
+        handleCreateNewChat(`Tra cứu: ${categoryName}`);
+    };
+
+    // --- 3. XỬ LÝ NÚT BÁO CÁO ---
+    const handleContactSupport = () => {
+        // Mở trình email mặc định
+        const email = "hotro.phapluat@cand.gov.vn"; // Thay bằng email thực tế
+        const subject = encodeURIComponent("Báo cáo nội dung cần hiệu chỉnh - Trợ lý Pháp luật");
+        const body = encodeURIComponent("Kính gửi bộ phận kỹ thuật,\n\nTôi muốn báo cáo nội dung sau:\n...");
+        
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     };
 
     return (
@@ -53,8 +68,7 @@ const Sidebar = ({
 
                 {/* New Chat Button */}
                 <div className="sidebar-new-chat-wrapper">
-                    {/* Gọi hàm local handleCreateNewChat */}
-                    <button onClick={handleCreateNewChat} className="btn-new-chat" aria-label="Start a new chat">
+                    <button onClick={() => handleCreateNewChat()} className="btn-new-chat" aria-label="Start a new chat">
                         <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -73,7 +87,11 @@ const Sidebar = ({
                             <ul className="nav-list">
                                 {sessions.map((session) => (
                                     <li key={session.id} className="nav-item-wrapper group">
-                                        <button onClick={() => onSelectSession(session.id)} className={`nav-item history-item ${currentSessionId === session.id && !activeCategory ? "active" : ""}`} title={session.title}>
+                                        <button 
+                                            onClick={() => onSelectSession(session.id)} 
+                                            className={`nav-item history-item ${currentSessionId === session.id ? "active" : ""}`} 
+                                            title={session.title}
+                                        >
                                             {session.title}
                                         </button>
                                         <button onClick={(e) => onDeleteSession(e, session.id)} className="btn-delete-session" title="Xóa">
@@ -95,7 +113,11 @@ const Sidebar = ({
                         <ul className="nav-list">
                             {CATEGORIES.map((category) => (
                                 <li key={category}>
-                                    <button onClick={() => onSelectCategory(category)} className={`nav-item category-item ${activeCategory === category ? "active" : ""}`}>
+                                    {/* SỬ DỤNG HÀM handleCategoryClick MỚI TẠI ĐÂY */}
+                                    <button 
+                                        onClick={() => handleCategoryClick(category)} 
+                                        className={`nav-item category-item ${activeCategory === category ? "active" : ""}`}
+                                    >
                                         {category}
                                     </button>
                                 </li>
@@ -109,14 +131,16 @@ const Sidebar = ({
                             <h3 className="nav-heading">Tiện ích</h3>
                         </div>
                         <ul className="nav-list">
+                            {/* Nút Tra cứu văn bản: Click vào cũng nên tạo chat mới */}
                             <li>
-                                <button onClick={() => onSelectCategory("Tra cứu văn bản")} className={`nav-item category-item ${activeCategory === "Tra cứu văn bản" ? "active" : ""}`}>
+                                <button onClick={() => handleCategoryClick("Tra cứu văn bản")} className={`nav-item category-item ${activeCategory === "Tra cứu văn bản" ? "active" : ""}`}>
                                     <svg className="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                     <span>Tra cứu văn bản</span>
                                 </button>
                             </li>
+                            {/* Nút Quản lý dữ liệu: Nút này thường là chuyển view khác, không tạo chat, nên giữ nguyên logic cũ */}
                             <li>
                                 <button onClick={() => onSelectCategory("Quản lý dữ liệu")} className={`nav-item category-item ${activeCategory === "Quản lý dữ liệu" ? "active" : ""}`}>
                                     <svg className="icon-sm mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,25 +149,16 @@ const Sidebar = ({
                                     <span>Quản lý dữ liệu</span>
                                 </button>
                             </li>
-                            {/* <li>
-                                <button onClick={() => onSelectCategory("Văn bản mới")} className={`nav-item category-item space-between group ${activeCategory === "Văn bản mới" ? "active" : ""}`}>
-                                    <span>Văn bản mới</span>
-                                    <span className="badge-new">MỚI</span>
-                                </button>
-                            </li> */}
-                            {/* <li>
-                                <button className="nav-item category-item">Văn bản nổi bật</button>
-                            </li>
-                            <li>
-                                <button className="nav-item category-item">Chủ đề tuyên truyền tháng</button>
-                            </li> */}
                         </ul>
                     </div>
                 </nav>
 
                 {/* Footer */}
                 <div className="sidebar-footer">
-                    <button className="btn-report">Báo nội dung cần hiệu chỉnh</button>
+                    {/* SỬ DỤNG HÀM handleContactSupport MỚI TẠI ĐÂY */}
+                    <button onClick={handleContactSupport} className="btn-report">
+                        Báo nội dung cần hiệu chỉnh
+                    </button>
                 </div>
             </div>
 

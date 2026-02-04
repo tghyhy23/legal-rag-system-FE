@@ -1,21 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { QUICK_ACTIONS, DISCLAIMER_TEXT } from "../../constants";
 // Lưu ý: Đảm bảo đường dẫn import đúng với nơi bạn lưu file service
-import { sendDemoMessage } from "../../apiRequest/chatService"; 
+import { sendDemoMessage } from "../../apiRequest/chatService";
 import "./ChatInterface.css";
 
-const ChatInterface = ({ 
-    category, 
-    initialMessages = [], 
-    onMessagesUpdate, 
-    username 
-}) => {
+const ChatInterface = ({ category, initialMessages = [], onMessagesUpdate, username }) => {
     const [messages, setMessages] = useState(initialMessages);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Ref cho input
-    const inputRef = useRef(null); 
+    const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
     const isFirstRender = useRef(true);
 
@@ -42,7 +37,7 @@ const ChatInterface = ({
     };
 
     const getUserDisplayName = (role) => {
-        return role === "model" ? "Trợ lý Pháp luật" : (username || "Cán bộ");
+        return role === "model" ? "Trợ lý Pháp luật" : username || "Cán bộ";
     };
 
     // --- XỬ LÝ GỬI TIN NHẮN ---
@@ -58,7 +53,7 @@ const ChatInterface = ({
             timestamp: new Date(),
         };
 
-        setMessages(prev => [...prev, userMsg]);
+        setMessages((prev) => [...prev, userMsg]);
         setInput(""); // Xóa input ngay lập tức
         setIsLoading(true);
 
@@ -78,9 +73,7 @@ const ChatInterface = ({
             // Nếu sau này bạn dùng lại RAG có sources, giữ logic này (optional)
             if (data.sources && data.sources.length > 0) {
                 formattedContent += "\n\n**Nguồn tham khảo:**\n";
-                const uniqueSources = data.sources.filter(
-                    (v, i, a) => a.findIndex((t) => t.doc_number === v.doc_number) === i
-                );
+                const uniqueSources = data.sources.filter((v, i, a) => a.findIndex((t) => t.doc_number === v.doc_number) === i);
                 uniqueSources.forEach((source, index) => {
                     formattedContent += `${index + 1}. **${source.doc_number}** - [${source.title}](${source.url})\n`;
                 });
@@ -92,11 +85,10 @@ const ChatInterface = ({
                 content: formattedContent,
                 timestamp: new Date(),
             };
-            setMessages(prev => [...prev, botMsg]);
-
+            setMessages((prev) => [...prev, botMsg]);
         } catch (error) {
             console.error("Chat Error:", error);
-            setMessages(prev => [
+            setMessages((prev) => [
                 ...prev,
                 {
                     id: (Date.now() + 2).toString(),
@@ -140,7 +132,11 @@ const ChatInterface = ({
                     }
                     // Xử lý in nghiêng _text_
                     if (part.startsWith("_") && part.endsWith("_")) {
-                        return <em key={i} className="text-gray-500">{part.slice(1, -1)}</em>;
+                        return (
+                            <em key={i} className="text-gray-500">
+                                {part.slice(1, -1)}
+                            </em>
+                        );
                     }
                     // Xử lý link [Title](url)
                     if (part.startsWith("[") && part.includes("](") && part.endsWith(")")) {
@@ -173,8 +169,13 @@ const ChatInterface = ({
             {/* Khu vực Chat */}
             <div className="chat-area">
                 {category && (
-                    <div className="category-badge-wrapper">
-                        <span className="category-badge">Chuyên mục: {category}</span>
+                    <div className="chat-category-divider">
+                        <span className="category-label">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ marginRight: "6px" }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            <p>Đang xem: <strong> {category} </strong></p>
+                        </span>
                     </div>
                 )}
 
@@ -182,26 +183,22 @@ const ChatInterface = ({
                     <div key={msg.id} className={`message-row ${msg.role === "user" ? "msg-user" : "msg-bot"}`}>
                         <div className={`message-bubble ${msg.role === "user" ? "bubble-user" : "bubble-bot"} ${msg.isError ? "bubble-error" : ""}`}>
                             <div className="msg-header">
-                                <div className={`avatar ${msg.role === "user" ? "avatar-user" : "avatar-bot"}`}>
-                                    {getAvatarLabel(msg.role)}
-                                </div>
-                                <span className="msg-role-name">
-                                    {getUserDisplayName(msg.role)}
-                                </span>
-                                <span className="msg-time">
-                                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                                </span>
+                                <div className={`avatar ${msg.role === "user" ? "avatar-user" : "avatar-bot"}`}>{getAvatarLabel(msg.role)}</div>
+                                <span className="msg-role-name">{getUserDisplayName(msg.role)}</span>
+                                <span className="msg-time">{new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                             </div>
-                            <div className="msg-content">
-                                {msg.role === "model" ? renderContent(msg.content) : msg.content}
-                            </div>
+                            <div className="msg-content">{msg.role === "model" ? renderContent(msg.content) : msg.content}</div>
                         </div>
                     </div>
                 ))}
 
                 {isLoading && (
                     <div className="loading-indicator">
-                        <div className="dots"><div></div><div></div><div></div></div>
+                        <div className="dots">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
                         <span>Đang tra cứu dữ liệu...</span>
                     </div>
                 )}
@@ -214,11 +211,7 @@ const ChatInterface = ({
                 {messages.length < 3 && !input && (
                     <div className="quick-actions">
                         {QUICK_ACTIONS.map((action) => (
-                            <button 
-                                key={action} 
-                                onClick={() => handleQuickActionClick(action)} 
-                                className="btn-quick-action"
-                            >
+                            <button key={action} onClick={() => handleQuickActionClick(action)} className="btn-quick-action">
                                 {action}
                             </button>
                         ))}
@@ -226,32 +219,16 @@ const ChatInterface = ({
                 )}
 
                 <div className="input-wrapper">
-                    <input
-                        ref={inputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Nhập câu hỏi pháp luật (không nhập thông tin mật/OTP)..."
-                        className="chat-input"
-                        disabled={isLoading}
-                        autoComplete="off"
-                    />
-                    <button 
-                        onClick={() => handleSendMessage()} 
-                        disabled={!input.trim() || isLoading} 
-                        className="btn-send"
-                        title="Gửi câu hỏi"
-                    >
+                    <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Nhập câu hỏi pháp luật (không nhập thông tin mật/OTP)..." className="chat-input" disabled={isLoading} autoComplete="off" />
+                    <button onClick={() => handleSendMessage()} disabled={!input.trim() || isLoading} className="btn-send" title="Gửi câu hỏi">
                         {/* Icon Send mũi tên */}
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </button>
                 </div>
-                
-                <p className="footer-note">
-                    Hệ thống đang chạy chế độ Demo (Gemini AI). Thông tin mang tính tham khảo.
-                </p>
+
+                <p className="footer-note">Hệ thống đang chạy chế độ Demo (Gemini AI). Thông tin mang tính tham khảo.</p>
             </div>
         </div>
     );

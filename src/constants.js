@@ -40,7 +40,7 @@ Nếu yêu cầu viết tuyên truyền: Tóm tắt dễ hiểu, thêm thông đ
 VII. CHẾ ĐỘ “CỔNG NỘI BỘ”
 Không bao giờ yêu cầu mật khẩu/OTP.
 `; // Giữ nguyên nội dung dài
-export const DISCLAIMER_TEXT = "Thông tin không thay thế ý kiến pháp chế và ý kiến nghiệp vụ có thẩm quyền. Vui lòng kiểm tra trước khi sử dụng";
+export const DISCLAIMER_TEXT = "Thông tin không thay thế ý kiến pháp chế và ý kiến nghiệp vụ có thẩm quyền. Vui lòng kiểm tra trước khi sử dụng.";
 export const INTERNAL_WARNING = "Chỉ dành cho tài khoản nội bộ. Mọi truy cập được ghi nhận theo quy định.";
 export const LOGIN_TITLE = "ĐĂNG NHẬP HỆ THỐNG HỎI ĐÁP PHÁP LUẬT – NỘI BỘ CAND";
 export const APP_HEADER = "CỔNG HỎI ĐÁP PHÁP LUẬT NỘI BỘ – CAND";

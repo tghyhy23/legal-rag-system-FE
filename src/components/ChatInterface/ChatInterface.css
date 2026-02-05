@@ -268,7 +268,7 @@
     font-size: 0.75rem;
     border-radius: 9999px; /* Bo tròn hẳn cho đẹp trên mobile */
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s;
     flex-shrink: 0; /* Không bị co lại */
 }
 
@@ -288,7 +288,7 @@
     background-color: #ffffff;
     border: 1.5px solid #e5e7eb;
     border-radius: 12px; /* Bo tròn hoàn toàn dạng pill (viên thuốc) */
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Shadow nhẹ tạo độ nổi */
 }
 

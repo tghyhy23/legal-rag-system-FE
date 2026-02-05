@@ -100,7 +100,7 @@
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s;
 }
 
 .form-input:focus {
@@ -141,7 +141,7 @@
   color: var(--white);
   background-color: var(--cand-red);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.15s;
 }
 
 .btn-submit:hover {
@@ -210,7 +210,7 @@
 .contact-support .support-link {
   color: var(--cand-red); /* Hoặc để màu đen #000 tùy ý bạn */
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
 .contact-support .support-link:hover {

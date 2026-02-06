@@ -45,7 +45,7 @@ export const INTERNAL_WARNING = "Chỉ dành cho tài khoản nội bộ. Mọi 
 export const LOGIN_TITLE = "ĐĂNG NHẬP HỆ THỐNG HỎI ĐÁP PHÁP LUẬT – NỘI BỘ CAND";
 export const APP_HEADER = "CỔNG HỎI ĐÁP PHÁP LUẬT NỘI BỘ – CAND";
 
-export const WELCOME_MESSAGE_CONTENT = `Kính chào Anh/Chị. Tôi là Trợ lý Pháp luật CAND – hỗ trợ hỏi đáp phục vụ tuyên truyền, phổ biến pháp luật trong lực lượng CAND.
+export const WELCOME_MESSAGE_CONTENT = `Chào Đồng chí. Tôi là Trợ lý Pháp luật CAND – hỗ trợ hỏi đáp phục vụ tuyên truyền, phổ biến pháp luật trong lực lượng CAND.
 Vui lòng cho biết:
 1. Lĩnh vực
 2. Thời điểm áp dụng

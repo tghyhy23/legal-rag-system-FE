@@ -1,7 +1,7 @@
 // src/services/chatService.js
 
 // URL ngrok của bạn (Lưu ý: Ngrok URL thay đổi mỗi lần chạy lại, hãy cập nhật khi cần)
-const API_BASE_URL = "https://easter-unprofiteering-tristin.ngrok-free.dev";
+const API_BASE_URL = "https://api-cand.dilshaadali.com/";
 
 /**
  * Gọi API Demo (Gemini thuần, không RAG)
